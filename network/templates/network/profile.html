@@ -1,0 +1,52 @@
+{% extends "network/layout.html" %}
+
+{% block body %}
+<div class="container">
+
+    {% if user.username|lower|slice:"-1" == "s" %}
+        <h1> {{ profile_user.username }}' profile </h1>
+    {% else %}
+        <h1> {{ profile_user.username }}'s profile</h1>
+    {% endif %}
+
+    <div class="profile-stats">
+        <div class="stats-left">
+            <span><strong>{{ follower_count }}</strong> Followers</span>
+            <span><strong>{{ following_count }}</strong> Following</span>
+        </div>
+        {% if user.is_authenticated and user != profile_user %}
+        <div class="stats-right">
+            <form action="{% url 'toggle_follow' profile_user.username %}" method="post">
+                {% csrf_token %}
+                {% if is_following %}
+                    <button type="submit" id='follow_button' class="btn btn-secondary">Unfollow</button>
+                {% else %}
+                    <button type="submit" class="btn btn-primary">Follow</button>
+                {% endif %}
+            </form>
+        </div>
+        {% endif %}
+    </div>
+
+    <hr>
+    
+    {% for post in posts %}
+    <a href="{% url 'profile' post.author}" style="text-decoration: none; color: inherit;">
+        <div class="post">
+            <h4>{{ post.author }}</h4>
+            <p id="post-text">{{ post.text }}</p>
+            <div class="post-footer">
+                <span id="post-likecount">❤️ {{ post.likes.count }}</span>
+                <span id="post-datetime">{{ post.datetime }}</span>
+            </div>
+        </div>
+    </a>
+    {% empty %}
+        <div style="display: flex;
+                    justify-content: center;
+                    align-items: center;">
+            <h4>User has no posts.</h4>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

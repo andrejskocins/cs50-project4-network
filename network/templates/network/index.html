@@ -1,0 +1,88 @@
+{% extends "network/layout.html" %}
+
+{% block script %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const textarea = document.getElementById('post-textarea');
+            
+            textarea.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+
+            // Submit form on Enter, prevent new line
+            textarea.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    this.closest('form').submit();
+                }
+            });
+        });
+    </script>
+{% endblock %}
+
+{% block body %}
+<div class="container">
+
+    <h1> {{ title }} </h1>
+
+    <form action="{% url 'new_post' %}" method="post" class="new-post-form">
+        {% csrf_token %}
+        <h2>New Post</h2>
+        <div class="form-group">
+            <textarea class="form-control" name="text-input" rows="2" autocomplete="off" id="post-textarea"></textarea>
+            <button class="btn btn-primary" type="submit">Post</button>
+        </div>
+    </form>
+
+    <hr>
+    
+    {% for post in page_obj %}
+    <a href="{% url 'profile' post.author.username %}" style="text-decoration: none; color: inherit;">
+        <div class="post">
+            <h4>{{ post.author }}</h4>
+            <p id="post-text">{{ post.text }}</p>
+            <div class="post-footer">
+                <span id="post-likecount">❤️ {{ post.likes.count }}</span>
+                <span id="post-datetime">{{ post.datetime }}</span>
+            </div>
+        </div>
+    </a>
+    {% empty %}
+        <div style="display: flex;
+                    justify-content: center;
+                    align-items: center;">
+            <h4>No posts.</h4>
+        </div>
+    {% endfor %}
+
+    <hr>
+    
+    <div class="pagination">
+        <nav>
+            <ul class="pagination">
+                <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+                    <a class="page-link" href="?page=1" {% if not page_obj.has_previous %}tabindex="-1" aria-disabled="true"{% endif %}>First</a>
+                </li>
+                <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+                    <a class="page-link" href="?page={% if page_obj.has_previous %}{{ page_obj.previous_page_number }}{% else %}1{% endif %}" {% if not page_obj.has_previous %}tabindex="-1" aria-disabled="true"{% endif %}>Previous</a>
+                </li>
+
+                <li class="page-item active">
+                    <span class="page-link">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                    </span>
+                </li>
+
+                <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+                    <a class="page-link" href="?page={% if page_obj.has_next %}{{ page_obj.next_page_number }}{% else %}{{ page_obj.paginator.num_pages }}{% endif %}" {% if not page_obj.has_next %}tabindex="-1" aria-disabled="true"{% endif %}>Next</a>
+                </li>
+                <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" {% if not page_obj.has_next %}tabindex="-1" aria-disabled="true"{% endif %}>Last</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+
+</div>
+{% endblock %}
