@@ -41,13 +41,33 @@ body {
     margin-top: 10px;
 }
 
+.like-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: transform 0.1s ease;
+    outline: none;
+}
+
+.like-button:focus {
+    outline: none;
+}
+
+.like-button:hover {
+    transform: scale(1.1);
+}
+
+.like-button:active {
+    transform: scale(0.95);
+}
+
 #post-text {
     text-align: justify;
     text-justify: inter-word;
 }
 
 #post-datetime {
-    text-align: "right";
+    text-align: right;
 }
 
 

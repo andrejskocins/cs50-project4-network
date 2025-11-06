@@ -1,5 +1,65 @@
 {% extends "network/layout.html" %}
 
+{% block script %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+
+            // LIKE FUNCTIONALITY
+            document.querySelectorAll('.like-button').forEach(button => {
+                button.addEventListener('click', async function(e) {
+                    e.preventDefault();
+                    
+                    const postId = this.dataset.postId;
+                    const likeCount = this.querySelector('.like-count');
+                    const heart = this.querySelector('.heart-icon');
+                    
+                    try {
+                        const response = await fetch(`/toggle_like/${postId}`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': getCookie('csrftoken'),
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            likeCount.textContent = data.like_count;
+                            
+                            // Toggle heart appearance
+                            if (data.liked) {
+                                heart.style.color = '#e0245e';
+                                heart.textContent = '❤️';
+                            } else {
+                                heart.style.color = '#657786';
+                                heart.textContent = '🤍';
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error toggling like:', error);
+                    }
+                });
+            });
+
+            // Get CSRF token from cookies
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+        });
+    </script>
+{% endblock %}
+
 {% block body %}
 <div class="container">
 
@@ -31,16 +91,23 @@
     <hr>
     
     {% for post in posts %}
-    <a href="{% url 'profile' post.author}" style="text-decoration: none; color: inherit;">
-        <div class="post">
-            <h4>{{ post.author }}</h4>
-            <p id="post-text">{{ post.text }}</p>
-            <div class="post-footer">
-                <span id="post-likecount">❤️ {{ post.likes.count }}</span>
-                <span id="post-datetime">{{ post.datetime }}</span>
-            </div>
+    <div class="post">
+        <h4>{{ post.author }}</h4>
+        <p id="post-text">{{ post.text }}</p>
+        <div class="post-footer">
+            {% if user.is_authenticated %}
+                <button class="like-button" data-post-id="{{ post.id }}" style="background: none; border: none; cursor: pointer; padding: 0; font-size: 16px;">
+                    <span class="heart-icon" style="{% if user in post.likes.all %}color: #e0245e;{% else %}color: #657786;{% endif %}">
+                        {% if user in post.likes.all %}❤️{% else %}🤍{% endif %}
+                    </span>
+                    <span class="like-count">{{ post.likes.count }}</span>
+                </button>
+            {% else %}
+                <span>❤️ <span class="like-count">{{ post.likes.count }}</span></span>
+            {% endif %}
+            <span id="post-datetime">{{ post.datetime }}</span>
         </div>
-    </a>
+    </div>
     {% empty %}
         <div style="display: flex;
                     justify-content: center;

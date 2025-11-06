@@ -1,6 +1,6 @@
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
@@ -18,22 +18,6 @@ def index(request):
 
     return render(request, "network/index.html", {
         "title": "All Posts",
-        "page_obj": page_obj
-    })
-
-
-@login_required
-def following(request):
-    # Get posts from users that the current user follows
-    following_users = request.user.following.all()
-    post_list = Post.objects.filter(author__in=following_users).order_by('-datetime')
-    paginator = Paginator(post_list, 10)
-
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
-    return render(request, "network/index.html", {
-        "title": "Following",
         "page_obj": page_obj
     })
 
@@ -113,6 +97,43 @@ def new_post(request):
 
     # If GET request, redirect to index
     return HttpResponseRedirect(reverse('index'))
+
+
+@login_required
+def following(request):
+    # Get posts from users that the current user follows
+    following_users = request.user.following.all()
+    post_list = Post.objects.filter(author__in=following_users).order_by('-datetime')
+    paginator = Paginator(post_list, 10)
+
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, "network/index.html", {
+        "title": "Following",
+        "page_obj": page_obj
+    })
+
+
+@login_required
+def toggle_like(request, post_id):
+    if request.method != "POST":
+        return JsonResponse({"error": "POST request required"}, status=400)
+    
+    post = get_object_or_404(Post, pk=post_id)
+    
+    # Toggle like
+    if request.user in post.likes.all():
+        post.likes.remove(request.user)
+        liked = False
+    else:
+        post.likes.add(request.user)
+        liked = True
+    
+    return JsonResponse({
+        "liked": liked,
+        "like_count": post.likes.count()
+    })
 
 
 def profile(request, username):
