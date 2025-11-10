@@ -97,7 +97,7 @@
         <div class="post-footer">
             {% if user.is_authenticated %}
                 <button class="like-button" data-post-id="{{ post.id }}" style="background: none; border: none; cursor: pointer; padding: 0; font-size: 16px;">
-                    <span class="heart-icon" style="{% if user in post.likes.all %}color: #e0245e;{% else %}color: #657786;{% endif %}">
+                    <span class="heart-icon">
                         {% if user in post.likes.all %}❤️{% else %}🤍{% endif %}
                     </span>
                     <span class="like-count">{{ post.likes.count }}</span>

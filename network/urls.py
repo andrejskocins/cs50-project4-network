@@ -12,5 +12,6 @@ urlpatterns = [
     path("new_post", views.new_post, name="new_post"),  # For creating new posts
     path("profile/<str:username>", views.profile, name="profile"),
     path("toggle_follow/<str:username>", views.toggle_follow, name="toggle_follow"),
-    path("toggle_like/<int:post_id>", views.toggle_like, name="toggle_like")
+    path("toggle_like/<int:post_id>", views.toggle_like, name="toggle_like"),
+    path("edit_post/<int:post_id>", views.edit_post, name="edit_post")
 ]

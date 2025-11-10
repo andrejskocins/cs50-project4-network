@@ -75,6 +75,78 @@
                 }
                 return cookieValue;
             }
+
+            // EDIT BUTTON
+            document.querySelectorAll('.edit-button').forEach(button =>{
+                button.addEventListener('click', async function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    const postId = this.dataset.postId;
+                    const postDiv = this.closest('.post');
+                    const textDiv = postDiv.querySelector("#text-div");
+                    const postTextElement = postDiv.querySelector('#post-text');
+                    
+                    // Check if already editing
+                    if (this.textContent === 'save') {
+                        // SAVE MODE
+                        const editTextarea = textDiv.querySelector('.edit-textarea');
+                        const newText = editTextarea.value.trim();
+                        
+                        if (!newText) {
+                            alert('Post cannot be empty');
+                            return;
+                        }
+                        
+                        try {
+                            const response = await fetch(`/edit_post/${postId}`, {
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRFToken': getCookie('csrftoken'),
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({ text: newText })
+                            });
+                            
+                            if (response.ok) {
+                                // Replace textarea with updated text
+                                textDiv.innerHTML = `<p id="post-text">${newText}</p>`;
+                                this.textContent = 'edit';
+                            } else {
+                                alert('Failed to save post');
+                            }
+                        } catch (error) {
+                            console.error('Error saving post:', error);
+                            alert('Error saving post');
+                        }
+                    } else {
+                        // EDIT MODE
+                        const postText = postTextElement.textContent;
+                        
+                        // Create textarea with auto-resize
+                        textDiv.innerHTML = `<textarea class="edit-textarea" style="width: 100%; resize: none; overflow: hidden; min-height: 50px; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">${postText}</textarea>`;
+                        
+                        const editTextarea = textDiv.querySelector('.edit-textarea');
+                        
+                        // Auto-resize to fit content
+                        function resizeTextarea() {
+                            editTextarea.style.height = 'auto';
+                            editTextarea.style.height = editTextarea.scrollHeight + 'px';
+                        }
+                        
+                        // Initial resize
+                        resizeTextarea();
+                        
+                        // Resize on input
+                        editTextarea.addEventListener('input', resizeTextarea);
+                        
+                        // Change button text to "save"
+                        this.textContent = 'save';
+                    }
+                });
+
+            });
+
         });
     </script>
 {% endblock %}
@@ -97,14 +169,21 @@
     
     {% for post in page_obj %}
     <div class="post">
-        <a href="{% url 'profile' post.author.username %}" style="text-decoration: none; color: inherit;">
-            <h4>{{ post.author }}</h4>
-            <p id="post-text">{{ post.text }}</p>
-        </a>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <a href="{% url 'profile' post.author.username %}" style="text-decoration: none; color: inherit;">
+                <span class="h4">{{ post.author }}</span>
+            </a>
+            {% if user == post.author %}
+                <button class="edit-button" data-post-id="{{ post.id }}" style="background: none; border: none; cursor: pointer; color: #657786; font-size: 14px;">edit</button>
+            {% endif %}
+        </div>
+        <div id="text-div">
+            <p id="post-text">{{ post.text }}</p>   
+        </div>
         <div class="post-footer">
             {% if user.is_authenticated %}
                 <button class="like-button" data-post-id="{{ post.id }}" style="background: none; border: none; cursor: pointer; padding: 0; font-size: 16px;">
-                    <span class="heart-icon" style="{% if user in post.likes.all %}color: #e0245e;{% else %}color: #657786;{% endif %}">
+                    <span class="heart-icon">
                         {% if user in post.likes.all %}❤️{% else %}🤍{% endif %}
                     </span>
                     <span class="like-count">{{ post.likes.count }}</span>

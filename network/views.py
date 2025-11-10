@@ -116,6 +116,7 @@ def following(request):
 
 
 @login_required
+@login_required
 def toggle_like(request, post_id):
     if request.method != "POST":
         return JsonResponse({"error": "POST request required"}, status=400)
@@ -134,6 +135,30 @@ def toggle_like(request, post_id):
         "liked": liked,
         "like_count": post.likes.count()
     })
+
+
+@login_required
+def edit_post(request, post_id):
+    if request.method != "POST":
+        return JsonResponse({"error": "POST request required"}, status=400)
+    
+    post = get_object_or_404(Post, pk=post_id)
+    
+    # Check if user is the author
+    if request.user != post.author:
+        return JsonResponse({"error": "Unauthorized"}, status=403)
+    
+    import json
+    data = json.loads(request.body)
+    new_text = data.get('text', '').strip()
+    
+    if not new_text:
+        return JsonResponse({"error": "Post cannot be empty"}, status=400)
+    
+    post.text = new_text
+    post.save()
+    
+    return JsonResponse({"success": True, "text": new_text})
 
 
 def profile(request, username):
