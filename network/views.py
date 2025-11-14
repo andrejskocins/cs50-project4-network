@@ -18,7 +18,9 @@ def index(request):
 
     return render(request, "network/index.html", {
         "title": "All Posts",
-        "page_obj": page_obj
+        "posts": page_obj,
+        "page_obj": page_obj,
+        "profile_user": None
     })
 
 
@@ -111,7 +113,9 @@ def following(request):
 
     return render(request, "network/index.html", {
         "title": "Following",
-        "page_obj": page_obj
+        "posts": page_obj,
+        "page_obj": page_obj,
+        "profile_user": None
     })
 
 
@@ -163,11 +167,26 @@ def edit_post(request, post_id):
 
 def profile(request, username):
     profile_user = get_object_or_404(User, username=username)
-    posts = Post.objects.filter(author=profile_user).order_by('-datetime')
+    post_list = Post.objects.filter(author=profile_user).order_by('-datetime')
+    
+    # Add pagination
+    paginator = Paginator(post_list, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
     is_following = request.user.is_authenticated and request.user.following.filter(pk=profile_user.pk).exists()
-    return render(request, "network/profile.html", {
+    
+    # Generate title with proper apostrophe placement
+    if profile_user.username.lower().endswith('s'):
+        title = f"{profile_user.username}' profile"
+    else:
+        title = f"{profile_user.username}'s profile"
+    
+    return render(request, "network/index.html", {
+        "title": title,
         "profile_user": profile_user,
-        "posts": posts,
+        "posts": page_obj,
+        "page_obj": page_obj,
         "is_following": is_following,
         "follower_count": profile_user.followers.count(),
         "following_count": profile_user.following.count()

@@ -154,20 +154,45 @@
 {% block body %}
 <div class="container">
 
-    <h1> {{ title }} </h1>
+    <h1>{{ title }}</h1>
 
-    <form action="{% url 'new_post' %}" method="post" class="new-post-form">
-        {% csrf_token %}
-        <h2>New Post</h2>
-        <div class="form-group">
-            <textarea class="form-control" name="text-input" rows="2" autocomplete="off" id="post-textarea"></textarea>
-            <button class="btn btn-primary" type="submit">Post</button>
+    {% if profile_user %}
+        <!-- Profile Stats Section -->
+        <div class="profile-stats">
+            <div class="stats-left">
+                <span><strong>{{ follower_count }}</strong> Followers</span>
+                <span><strong>{{ following_count }}</strong> Following</span>
+            </div>
+            {% if user.is_authenticated and user != profile_user %}
+            <div class="stats-right">
+                <form action="{% url 'toggle_follow' profile_user.username %}" method="post">
+                    {% csrf_token %}
+                    {% if is_following %}
+                        <button type="submit" class="btn btn-secondary">Unfollow</button>
+                    {% else %}
+                        <button type="submit" class="btn btn-primary">Follow</button>
+                    {% endif %}
+                </form>
+            </div>
+            {% endif %}
         </div>
-    </form>
+    {% else %}
+        <!-- New Post Form (only on main feed) -->
+        {% if user.is_authenticated %}
+        <form action="{% url 'new_post' %}" method="post" class="new-post-form">
+            {% csrf_token %}
+            <h2>New Post</h2>
+            <div class="form-group">
+                <textarea class="form-control" name="text-input" rows="2" autocomplete="off" id="post-textarea"></textarea>
+                <button class="btn btn-primary" type="submit">Post</button>
+            </div>
+        </form>
+        {% endif %}
+    {% endif %}
 
     <hr>
     
-    {% for post in page_obj %}
+    {% for post in posts %}
     <div class="post">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <a href="{% url 'profile' post.author.username %}" style="text-decoration: none; color: inherit;">
@@ -198,10 +223,11 @@
         <div style="display: flex;
                     justify-content: center;
                     align-items: center;">
-            <h4>No posts.</h4>
+            <h4>{% if profile_user %}User has no posts.{% else %}No posts.{% endif %}</h4>
         </div>
     {% endfor %}
 
+    {% if page_obj %}
     <hr>
     
     <div class="pagination">
@@ -229,6 +255,7 @@
             </ul>
         </nav>
     </div>
+    {% endif %}
 
 </div>
 {% endblock %}
