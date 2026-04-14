@@ -56,13 +56,12 @@ INSTALLATION
 
 USAGE
 -----
-1. Navigate to http://localhost:8000
-2. Register a new account or login
-3. Create posts from the homepage
-4. Visit user profiles to follow/unfollow users
-5. Like posts by clicking the like button
-6. Edit your own posts using the edit functionality
-7. View posts from followed users in the "Following" page
+1. Register a new account or login
+2. Create posts from the homepage
+3. Visit user profiles to follow/unfollow users
+4. Like posts by clicking the like button
+5. Edit your own posts using the edit functionality
+6. View posts from followed users in the "Following" page
 
 URL ENDPOINTS
 -------------
